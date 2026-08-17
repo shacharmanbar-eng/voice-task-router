@@ -129,12 +129,14 @@
       }
     });
 async function testServerConnection() {
-  const response = await fetch(
+
+  await fetch(
     "https://script.google.com/macros/s/AKfycbwN5A_GYbLvkP4ZbXhcTKcqyxn4kvX-PaFDtqQ2X95Unh5_PP4NQ5pR6Ib9XQdmV_iC/exec",
     {
       method: "POST",
+      mode: "no-cors",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "text/plain"
       },
       body: JSON.stringify({
         type: "test"
@@ -142,18 +144,11 @@ async function testServerConnection() {
     }
   );
 
-  const data = await response.json();
-
-  console.log(data);
-
   statusBox.textContent =
-    data.success
-      ? "✅ החיבור לשרת עובד"
-      : "❌ החיבור לשרת נכשל";
+    "✅ הבקשה נשלחה לשרת";
 }
 
 testServerConnection();
-
 </script>
 
 </body>
