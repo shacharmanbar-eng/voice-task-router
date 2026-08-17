@@ -128,7 +128,33 @@
           "🎤 התחל הקלטה";
       }
     });
-  </script>
+async function testServerConnection() {
+  const response = await fetch(
+    https://script.google.com/macros/s/AKfycbwN5A_GYbLvkP4ZbXhcTKcqyxn4kvX-PaFDtqQ2X95Unh5_PP4NQ5pR6Ib9XQdmV_iC/exec,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        type: "test"
+      })
+    }
+  );
+
+  const data = await response.json();
+
+  console.log(data);
+
+  statusBox.textContent =
+    data.success
+      ? "✅ החיבור לשרת עובד"
+      : "❌ החיבור לשרת נכשל";
+}
+
+testServerConnection();
+
+</script>
 
 </body>
 </html>
