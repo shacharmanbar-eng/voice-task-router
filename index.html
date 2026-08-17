@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>משימה קולית</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 30px 20px;
+      text-align: center;
+    }
+
+    h1 {
+      margin-bottom: 30px;
+    }
+
+    button {
+      font-size: 20px;
+      padding: 18px 30px;
+      cursor: pointer;
+    }
+
+    #status {
+      margin-top: 25px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>הוספת משימה קולית</h1>
+
+  <button id="recordButton">
+    🎤 התחל הקלטה
+  </button>
+
+  <div id="status">
+    מוכן להקלטה
+  </div>
+
+  <script>
+    const recordButton = document.getElementById("recordButton");
+    const statusBox = document.getElementById("status");
+
+    let mediaRecorder;
+    let audioChunks = [];
+    let isRecording = false;
+
+    recordButton.addEventListener("click", async () => {
+
+      if (!isRecording) {
+
+        try {
+          const stream =
+            await navigator.mediaDevices.getUserMedia({ audio: true });
+
+          audioChunks = [];
+
+          mediaRecorder = new MediaRecorder(stream);
+
+          mediaRecorder.ondataavailable = event => {
+            audioChunks.push(event.data);
+          };
+
+          mediaRecorder.onstop = () => {
+
+            const audioBlob = new Blob(
+              audioChunks,
+              { type: mediaRecorder.mimeType }
+            );
+
+            console.log(
+              "ההקלטה הצליחה. גודל:",
+              audioBlob.size,
+              "bytes"
+            );
+
+            statusBox.textContent =
+              "✅ ההקלטה הסתיימה בהצלחה";
+
+            stream.getTracks().forEach(track => track.stop());
+          };
+
+          mediaRecorder.start();
+
+          isRecording = true;
+
+          recordButton.textContent =
+            "⏹️ עצור הקלטה";
+
+          statusBox.textContent =
+            "🎙️ מקליט...";
+
+        } catch (error) {
+
+          console.error(error);
+
+          statusBox.textContent =
+            "❌ לא ניתן להפעיל את המיקרופון";
+        }
+
+      } else {
+
+        mediaRecorder.stop();
+
+        isRecording = false;
+
+        recordButton.textContent =
+          "🎤 התחל הקלטה";
+      }
+    });
+  </script>
+
+</body>
+</html>
