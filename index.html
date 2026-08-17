@@ -113,6 +113,35 @@ reader.onloadend = async function () {
 };
 
 reader.readAsDataURL(audioBlob);
+
+reader.onloadend = async function () {
+  const base64Audio =
+    reader.result.split(",")[1];
+
+  statusBox.textContent =
+    "⏳ שולח לתמלול...";
+
+  await fetch(
+    "https://script.google.com/macros/s/AKfycbwN5A_GYbLvkP4ZbXhcTKcqyxn4kvX-PaFDtqQ2X95Unh5_PP4NQ5pR6Ib9XQdmV_iC/exec",
+    {
+      method: "POST",
+      mode: "no-cors",
+      headers: {
+        "Content-Type": "text/plain"
+      },
+      body: JSON.stringify({
+        type: "audio",
+        mimeType: audioBlob.type,
+        audioBase64: base64Audio
+      })
+    }
+  );
+
+  statusBox.textContent =
+    "✅ ההקלטה נשלחה לתמלול";
+};
+
+reader.readAsDataURL(audioBlob);
             const audioUrl = URL.createObjectURL(audioBlob);
 
             audioPlayer.src = audioUrl;
