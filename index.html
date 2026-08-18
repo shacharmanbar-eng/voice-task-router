@@ -1,8 +1,13 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
+
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
   <title>משימה קולית</title>
 
@@ -50,164 +55,264 @@
     מוכן להקלטה
   </div>
 
-  <audio id="audioPlayer" controls></audio>
+  <audio
+    id="audioPlayer"
+    controls
+  ></audio>
+
 
   <script>
-    const recordButton = document.getElementById("recordButton");
-    const statusBox = document.getElementById("status");
-    const audioPlayer = document.getElementById("audioPlayer");
+
+    const WEB_APP_URL =
+      "https://script.google.com/macros/s/AKfycbwN5A_GYbLvkP4ZbXhcTKcqyxn4kvX-PaFDtqQ2X95Unh5_PP4NQ5pR6Ib9XQdmV_iC/exec";
+
+
+    const recordButton =
+      document.getElementById("recordButton");
+
+    const statusBox =
+      document.getElementById("status");
+
+    const audioPlayer =
+      document.getElementById("audioPlayer");
+
 
     let mediaRecorder;
+
     let audioChunks = [];
+
     let isRecording = false;
 
-    recordButton.addEventListener("click", async () => {
+    let currentStream = null;
 
-      if (!isRecording) {
 
-        try {
-          const stream =
-            await navigator.mediaDevices.getUserMedia({ audio: true });
+    recordButton.addEventListener(
+      "click",
+      async function () {
 
-          audioChunks = [];
+        if (!isRecording) {
 
-          mediaRecorder = new MediaRecorder(stream);
+          try {
 
-          mediaRecorder.ondataavailable = event => {
-            audioChunks.push(event.data);
-          };
+            currentStream =
+              await navigator.mediaDevices
+                .getUserMedia({
+                  audio: true
+                });
 
-          mediaRecorder.onstop = () => {
 
-            const audioBlob = new Blob(
-              audioChunks,
-              { type: mediaRecorder.mimeType }
-            );
-const reader = new FileReader();
+            audioChunks = [];
 
-reader.onloadend = async function () {
-  const base64Audio =
-    reader.result.split(",")[1];
 
-  statusBox.textContent =
-    "⏳ שולח לתמלול...";
+            mediaRecorder =
+              new MediaRecorder(
+                currentStream
+              );
 
-  await fetch(
-    "https://script.google.com/macros/s/AKfycbwN5A_GYbLvkP4ZbXhcTKcqyxn4kvX-PaFDtqQ2X95Unh5_PP4NQ5pR6Ib9XQdmV_iC/exec",
-    {
-      method: "POST",
-      mode: "no-cors",
-      headers: {
-        "Content-Type": "text/plain"
-      },
-      body: JSON.stringify({
-        type: "audio",
-        mimeType: audioBlob.type,
-        audioBase64: base64Audio
-      })
-    }
-  );
 
-  statusBox.textContent =
-    "✅ ההקלטה נשלחה לתמלול";
-};
+            mediaRecorder.ondataavailable =
+              function (event) {
 
-reader.readAsDataURL(audioBlob);
+                if (event.data.size > 0) {
+                  audioChunks.push(
+                    event.data
+                  );
+                }
 
-reader.onloadend = async function () {
-  const base64Audio =
-    reader.result.split(",")[1];
+              };
 
-  statusBox.textContent =
-    "⏳ שולח לתמלול...";
 
-  await fetch(
-    "https://script.google.com/macros/s/AKfycbwN5A_GYbLvkP4ZbXhcTKcqyxn4kvX-PaFDtqQ2X95Unh5_PP4NQ5pR6Ib9XQdmV_iC/exec",
-    {
-      method: "POST",
-      mode: "no-cors",
-      headers: {
-        "Content-Type": "text/plain"
-      },
-      body: JSON.stringify({
-        type: "audio",
-        mimeType: audioBlob.type,
-        audioBase64: base64Audio
-      })
-    }
-  );
+            mediaRecorder.onstop =
+              async function () {
 
-  statusBox.textContent =
-    "✅ ההקלטה נשלחה לתמלול";
-};
+                try {
 
-reader.readAsDataURL(audioBlob);
-            const audioUrl = URL.createObjectURL(audioBlob);
+                  statusBox.textContent =
+                    "⏳ מכין את ההקלטה...";
 
-            audioPlayer.src = audioUrl;
 
-            console.log(
-              "ההקלטה הצליחה. גודל:",
-              audioBlob.size,
-              "bytes"
-            );
+                  const audioBlob =
+                    new Blob(
+                      audioChunks,
+                      {
+                        type:
+                          mediaRecorder.mimeType
+                      }
+                    );
+
+
+                  // מאפשר להשמיע את ההקלטה בדף
+                  const audioUrl =
+                    URL.createObjectURL(
+                      audioBlob
+                    );
+
+                  audioPlayer.src =
+                    audioUrl;
+
+
+                  // המרה ל-Base64
+                  const base64Audio =
+                    await blobToBase64(
+                      audioBlob
+                    );
+
+
+                  statusBox.textContent =
+                    "⏳ שולח לתמלול וליצירת משימה...";
+
+
+                  await fetch(
+                    WEB_APP_URL,
+                    {
+                      method: "POST",
+
+                      mode: "no-cors",
+
+                      headers: {
+                        "Content-Type":
+                          "text/plain"
+                      },
+
+                      body:
+                        JSON.stringify({
+                          type: "audio",
+                          mimeType:
+                            audioBlob.type,
+                          audioBase64:
+                            base64Audio
+                        })
+                    }
+                  );
+
+
+                  statusBox.textContent =
+                    "✅ ההקלטה נשלחה לעיבוד";
+
+
+                } catch (error) {
+
+                  console.error(
+                    "שגיאה בשליחת ההקלטה:",
+                    error
+                  );
+
+                  statusBox.textContent =
+                    "❌ אירעה שגיאה בשליחת ההקלטה";
+
+                } finally {
+
+                  if (currentStream) {
+
+                    currentStream
+                      .getTracks()
+                      .forEach(
+                        track =>
+                          track.stop()
+                      );
+
+                    currentStream =
+                      null;
+                  }
+
+                }
+
+              };
+
+
+            mediaRecorder.start();
+
+
+            isRecording = true;
+
+
+            recordButton.textContent =
+              "⏹️ עצור הקלטה";
+
 
             statusBox.textContent =
-              "✅ ההקלטה הסתיימה בהצלחה";
+              "🎙️ מקליט...";
 
-            stream.getTracks().forEach(track => track.stop());
-          };
 
-          mediaRecorder.start();
+          } catch (error) {
 
-          isRecording = true;
+            console.error(
+              "שגיאת מיקרופון:",
+              error
+            );
+
+
+            statusBox.textContent =
+              "❌ לא ניתן להפעיל את המיקרופון";
+
+          }
+
+
+        } else {
+
+          mediaRecorder.stop();
+
+          isRecording = false;
+
 
           recordButton.textContent =
-            "⏹️ עצור הקלטה";
+            "🎤 התחל הקלטה";
 
-          statusBox.textContent =
-            "🎙️ מקליט...";
-
-        } catch (error) {
-
-          console.error(error);
-
-          statusBox.textContent =
-            "❌ לא ניתן להפעיל את המיקרופון";
         }
 
-      } else {
-
-        mediaRecorder.stop();
-
-        isRecording = false;
-
-        recordButton.textContent =
-          "🎤 התחל הקלטה";
       }
-    });
-async function testServerConnection() {
+    );
 
-  await fetch(
-    "https://script.google.com/macros/s/AKfycbwN5A_GYbLvkP4ZbXhcTKcqyxn4kvX-PaFDtqQ2X95Unh5_PP4NQ5pR6Ib9XQdmV_iC/exec",
-    {
-      method: "POST",
-      mode: "no-cors",
-      headers: {
-        "Content-Type": "text/plain"
-      },
-      body: JSON.stringify({
-        type: "test"
-      })
+
+    function blobToBase64(blob) {
+
+      return new Promise(
+        function (
+          resolve,
+          reject
+        ) {
+
+          const reader =
+            new FileReader();
+
+
+          reader.onloadend =
+            function () {
+
+              const result =
+                reader.result;
+
+              const base64 =
+                result.split(",")[1];
+
+              resolve(base64);
+
+            };
+
+
+          reader.onerror =
+            function () {
+
+              reject(
+                new Error(
+                  "לא ניתן לקרוא את קובץ ההקלטה"
+                )
+              );
+
+            };
+
+
+          reader.readAsDataURL(
+            blob
+          );
+
+        }
+      );
+
     }
-  );
 
-  statusBox.textContent =
-    "✅ הבקשה נשלחה לשרת";
-}
-
-testServerConnection();
-</script>
+  </script>
 
 </body>
+
 </html>
