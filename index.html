@@ -191,8 +191,46 @@ await fetch(
 
 
 
-                  statusBox.textContent =
-                    "✅ ההקלטה נשלחה לעיבוד";
+statusBox.textContent =
+  "⏳ ממתין לאישור יצירת המשימות...";
+
+const result =
+  await waitForResult(requestId);
+
+if (result.status === "done") {
+
+  const taskCount =
+    Array.isArray(result.tasks)
+      ? result.tasks.length
+      : 0;
+
+  let message =
+    "✅ נוספו " +
+    taskCount +
+    " משימות";
+
+  if (taskCount > 0) {
+    message += "\n\n";
+
+    message += result.tasks
+      .map(
+        task =>
+          "• " +
+          task.title +
+          " → " +
+          task.category
+      )
+      .join("\n");
+  }
+
+  statusBox.textContent =
+    message;
+
+} else {
+
+  statusBox.textContent =
+    "❌ העיבוד לא הסתיים בהצלחה";
+}
 
 
                 } catch (error) {
@@ -315,7 +353,58 @@ await fetch(
       );
 
     }
+async function waitForResult(requestId) {
 
+  const maxAttempts = 20;
+
+  for (
+    let attempt = 1;
+    attempt <= maxAttempts;
+    attempt++
+  ) {
+
+    try {
+
+      const statusUrl =
+        WEB_APP_URL +
+        "?requestId=" +
+        encodeURIComponent(requestId);
+
+      const response =
+        await fetch(statusUrl);
+
+      const result =
+        await response.json();
+
+      if (result.status === "done") {
+        return result;
+      }
+
+      if (result.status === "error") {
+        return result;
+      }
+
+    } catch (error) {
+
+      console.error(
+        "שגיאה בבדיקת סטטוס:",
+        error
+      );
+    }
+
+    await new Promise(
+      resolve =>
+        setTimeout(
+          resolve,
+          2000
+        )
+    );
+  }
+
+  return {
+    status: "timeout"
+  };
+}
   </script>
 
 </body>
