@@ -162,27 +162,32 @@
                     "⏳ שולח לתמלול וליצירת משימה...";
 
 
-                  await fetch(
-                    WEB_APP_URL,
-                    {
-                      method: "POST",
+           const requestId =
+  crypto.randomUUID();
 
-                      mode: "no-cors",
+await fetch(
+  WEB_APP_URL,
+  {
+    method: "POST",
 
-                      headers: {
-                        "Content-Type":
-                          "text/plain"
-                      },
+    mode: "no-cors",
 
-                      body:
-                        JSON.stringify({
-                          type: "audio",
-                          mimeType:
-                            audioBlob.type,
-                          audioBase64:
-                            base64Audio
-                        })
-                    }
+    headers: {
+      "Content-Type":
+        "text/plain"
+    },
+
+    body:
+      JSON.stringify({
+        type: "audio",
+        requestId: requestId,
+        mimeType:
+          audioBlob.type,
+        audioBase64:
+          base64Audio
+      })
+  }
+);
                   );
 
 
